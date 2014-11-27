@@ -1,12 +1,27 @@
 (ns hello-clojurescript
   (:require [ajax.core :refer [GET POST]]
             [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]))
+            [om.dom :as dom :include-macros true]
+            [cognitect.transit :as t]))
+
+(def r (t/reader :json))
+
+(defn to-json [response-text]
+  (t/read r response-text))
+
+(defn get-issues [json]
+  (get json "issues"))
 
 (def app-state (atom))
 
+(defn issues-handler [response]
+  (let [data (to-json (str response))
+        issues (get-issues data)
+        first-issue-tile (get (get (first issues) "fields") "summary")]
+    (swap! app-state assoc :text first-issue-tile)))
+
 (GET "/issues.json"
-     {:handler #(swap! app-state assoc :text (str %))})
+     {:handler issues-handler})
 
 (swap! app-state assoc :text "Do it live!")
 
