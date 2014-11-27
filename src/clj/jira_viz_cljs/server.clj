@@ -4,33 +4,17 @@
             [ring.util.response :as response])
   (:gen-class))
 
-(defn render-app []
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body
-   (str "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<link rel=\"stylesheet\" href=\"css/page.css\" />"
-        "</head>"
-        "<body>"
-        "<div>"
-        "<p id=\"clickable\">Click me!</p>"
-        "</div>"
-        "<script src=\"js/cljs.js\"></script>"
-        "</body>"
-        "</html>")})
-
 (defn render-index []
   {:status 200
    :headers {"Content-Type" "text/html"}
    :body (slurp "resources/public/index.html")})
 
 (defn handler [request]
-   (render-index))
-  ;;(if (= "/" (:uri request))
-  ;;    (response/redirect "/help.html")
-  ;;    (render-app)))
+   (if (= "/issues.json" (:uri request))
+       {:status 200
+        :header {"Content-Type" "application/json"}
+        :body (slurp "resources/public/jira-mock.json")}
+       (render-index)))
 
 (def app
   (-> handler
