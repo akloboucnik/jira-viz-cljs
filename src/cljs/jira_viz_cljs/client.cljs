@@ -5,6 +5,7 @@
             [cognitect.transit :as t]))
 
 (def r (t/reader :json))
+(def app-state (atom))
 
 (defn to-json [response-text]
   (t/read r response-text))
@@ -12,30 +13,31 @@
 (defn get-issues [json]
   (get json "issues"))
 
-(def app-state (atom))
-
 (defn issues-handler [response]
   (let [data (to-json (str response))
-        issues (get-issues data)
-        first-issue-tile (get (get (first issues) "fields") "summary")]
-    (swap! app-state assoc :text first-issue-tile)))
+        issues (get-issues data)]
+    (swap! app-state assoc :items issues)))
 
 (GET "/issues.json"
      {:handler issues-handler})
 
 (swap! app-state assoc :text "Do it live!")
 
-(om/root
-  (fn [app owner]
-    (reify om/IRender
-      (render [_]
-        (dom/h1 nil (:text app)))))
-  app-state
+(defn story-view [story owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div #js {:className "story"} (get (get story "fields") "summary")))))
+
+(defn stories-view [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div nil
+               (dom/h2 nil "Stories")
+               (apply dom/div #js {:className "stories"}
+                      (om/build-all story-view (:items app)))))))
+
+(om/root stories-view app-state
   {:target (. js/document (getElementById "my-app"))})
 
-; (defn handle-click []
-;   (GET "http://localhost:3000/issues.json")
-;   (js/alert "Hello!"))
-;
-; (def clickable (.getElementById js/document "clickable"))
-; (.addEventListener clickable "click" handle-click)
