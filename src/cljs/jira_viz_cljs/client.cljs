@@ -5,6 +5,9 @@
 
 (def app-state (atom))
 
+(GET "/issues.json"
+     {:handler #(swap! app-state assoc :text (str %))})
+
 (swap! app-state assoc :text "Do it live!")
 
 (om/root
